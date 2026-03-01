@@ -57,8 +57,17 @@ jobs:
       - name: Hugo version
         run: hugo version
 
-      - name: Build Hugo site
-        run: hugo --minify --source=site --destination=site/public
+      - name: Hugo build log
+        run: |
+          hugo --minify --source=site --destination=site/public --verbose 2>&1 | tee hugo-build.log
+          echo "Build log tail:"
+          tail -n 50 hugo-build.log || true
+
+      - name: Show artifact and checksums
+        run: |
+          ls -la site/public || true
+          find site/public -type f -iname '*.html' -maxdepth 6 -print -exec stat --format='%n %s bytes %U:%G %A' {} \; || true
+          test -f site/public/index.html && md5sum site/public/index.html || true
 
       - name: Debug artifact root - pwd, ls, tree, stat, head
         run: |
@@ -68,14 +77,23 @@ jobs:
           ls -la site/public || true
           echo "Recursive tree (maxdepth 4):"
           find site/public -maxdepth 4 -print -exec ls -ld {} \; || true
-          echo "Find index files:"
-          find site/public -type f -iname index.html -maxdepth 5 -print -exec stat --format='  %n %s bytes %U:%G %A' {} \; || true
-          echo "Show first 20 lines of index.html if present:"
-          if [ -f site/public/index.html ]; then head -n 20 site/public/index.html; else echo "site/public/index.html not at root"; fi
+          echo "Find any html files under site/public:"
+          find site/public -type f -iname '*.html' -maxdepth 6 -print -exec stat --format='  %n %s bytes %U:%G %A' {} \; || true
+          echo "Find index files (case-insensitive):"
+          find site/public -type f -iname 'index.*' -maxdepth 6 -print -exec stat --format='  %n %s bytes %U:%G %A' {} \; || true
+          echo "Show first 40 lines of site/public/index.html if present:"
+          if [ -f site/public/index.html ]; then head -n 40 site/public/index.html; else echo "site/public/index.html not at root"; fi
           echo "File checksum (md5) if present:"
           if [ -f site/public/index.html ]; then md5sum site/public/index.html || true; fi
           echo "Disk usage of artifact:"
           du -sh site/public || true
+
+      - name: (Optional) Create temporary test index to validate deploy
+        if: ${{ always() && false }}
+        run: |
+          mkdir -p site/public
+          echo '<!doctype html><meta charset="utf-8"><title>test</title><h1>test</h1>' > site/public/index.html
+          ls -la site/public
 
       - name: Build And Deploy
         id: builddeploy
