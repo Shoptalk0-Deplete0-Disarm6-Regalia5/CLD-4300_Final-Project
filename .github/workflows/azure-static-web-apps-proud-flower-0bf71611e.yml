@@ -64,6 +64,8 @@ jobs:
         run: |
           echo "Listing site/public:"
           ls -la site/public || true
+          echo "Index exists:"
+          test -f site/public/index.html && echo "index.html found" || echo "index.html NOT found"
 
       - name: Build And Deploy
         id: builddeploy
@@ -72,9 +74,9 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PROUD_FLOWER_0BF71611E }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          app_location: "./site"
+          app_location: "./site/public"
           api_location: ""
-          output_location: "public"
+          output_location: ""
           github_id_token: ${{ steps.idtoken.outputs.result }}
           skip_app_build: true
 
