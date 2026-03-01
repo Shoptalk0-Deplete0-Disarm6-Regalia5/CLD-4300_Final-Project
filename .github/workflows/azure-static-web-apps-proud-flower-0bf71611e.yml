@@ -62,10 +62,12 @@ jobs:
 
       - name: Show built files
         run: |
-          echo "Listing site/public:"
+          echo "Listing site/public (root):"
           ls -la site/public || true
-          echo "Index exists:"
-          test -f site/public/index.html && echo "index.html found" || echo "index.html NOT found"
+          echo "Find any index.html under site/public:"
+          find site/public -type f -name index.html -maxdepth 5 -print || true
+          echo "If index.html exists at root, show first lines:"
+          test -f site/public/index.html && head -n 20 site/public/index.html || echo "site/public/index.html not found"
 
       - name: Build And Deploy
         id: builddeploy
