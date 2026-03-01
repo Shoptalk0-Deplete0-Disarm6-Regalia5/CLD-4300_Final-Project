@@ -1,20 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Pin Hugo version
-HUGO_VER="0.116.0"
+HUGO_VER="0.157.0"
+TAR_URL="https://github.com/gohugoio/hugo/releases/download/v${HUGO_VER}/hugo_${HUGO_VER}_Linux-64bit.tar.gz"
+TMP_TAR="/tmp/hugo.tar.gz"
 
-# Basic packages
 sudo apt-get update -y
 sudo apt-get install -y ca-certificates curl git
 
-# Install Hugo (Linux 64-bit)
-curl -L -o /tmp/hugo.deb "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VER}/hugo_${HUGO_VER}_Linux-64bit.deb"
-sudo dpkg -i /tmp/hugo.deb || true
-rm -f /tmp/hugo.deb
+curl -L -o "${TMP_TAR}" "${TAR_URL}"
+tar -xzf "${TMP_TAR}" -C /tmp
+sudo mv /tmp/hugo /usr/local/bin/hugo
+sudo chmod +x /usr/local/bin/hugo
+rm -f "${TMP_TAR}"
 
-# Verify install
 hugo version
 
-# Initialize git submodules (themes) if present
 git submodule update --init --recursive || true
