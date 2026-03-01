@@ -17,36 +17,13 @@ jobs:
     permissions:
       id-token: write
       contents: read
+
     steps:
       - name: Checkout repository (with submodules)
         uses: actions/checkout@v4
         with:
           submodules: true
           lfs: false
-
-      - name: Install OIDC Client from Core Package
-        run: npm install @actions/core@1.6.0 @actions/http-client
-
-      - name: Get Id Token
-        uses: actions/github-script@v6
-        id: idtoken
-        with:
-          script: |
-            const coredemo = require('@actions/core')
-            return await coredemo.getIDToken()
-          result-encoding: string
-
-      - name: Setup Node (for PostCSS if needed)
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Install npm deps if present
-        working-directory: site
-        run: |
-          if [ -f package.json ]; then
-            npm ci
-          fi
 
       - name: Setup Hugo (Extended)
         uses: peaceiris/actions-hugo@v2
@@ -57,64 +34,35 @@ jobs:
       - name: Hugo version
         run: hugo version
 
-      - name: Hugo build log
+      - name: Build Hugo site (corrected path)
+        working-directory: site
         run: |
-          hugo --minify --source=site --destination=site/public --verbose 2>&1 | tee hugo-build.log
-          echo "Build log tail:"
-          tail -n 50 hugo-build.log || true
+          hugo --minify --destination=public
+          echo "Build complete. Listing public/:"
+          ls -la public
 
       - name: Show artifact and checksums
         run: |
+          echo "Listing site/public:"
           ls -la site/public || true
-          find site/public -type f -iname '*.html' -maxdepth 6 -print -exec stat --format='%n %s bytes %U:%G %A' {} \; || true
+          echo "Find HTML files:"
+          find site/public -type f -iname '*.html' -print -exec stat --format='%n %s bytes' {} \; || true
           test -f site/public/index.html && md5sum site/public/index.html || true
 
-      - name: Debug artifact root - pwd, ls, tree, stat, head
-        run: |
-          echo "PWD: $(pwd)"
-          echo "Runner user: $(id -un) $(id -a)"
-          echo "Listing site/public (root):"
-          ls -la site/public || true
-          echo "Recursive tree (maxdepth 4):"
-          find site/public -maxdepth 4 -print -exec ls -ld {} \; || true
-          echo "Find any html files under site/public:"
-          find site/public -type f -iname '*.html' -maxdepth 6 -print -exec stat --format='  %n %s bytes %U:%G %A' {} \; || true
-          echo "Find index files (case-insensitive):"
-          find site/public -type f -iname 'index.*' -maxdepth 6 -print -exec stat --format='  %n %s bytes %U:%G %A' {} \; || true
-          echo "Show first 40 lines of site/public/index.html if present:"
-          if [ -f site/public/index.html ]; then head -n 40 site/public/index.html; else echo "site/public/index.html not at root"; fi
-          echo "File checksum (md5) if present:"
-          if [ -f site/public/index.html ]; then md5sum site/public/index.html || true; fi
-          echo "Disk usage of artifact:"
-          du -sh site/public || true
-
-      - name: (Optional) Create temporary test index to validate deploy
-        if: ${{ always() && false }}
-        run: |
-          mkdir -p site/public
-          echo '<!doctype html><meta charset="utf-8"><title>test</title><h1>test</h1>' > site/public/index.html
-          ls -la site/public
-
-      - name: Build And Deploy
-        id: builddeploy
+      - name: Deploy to Azure Static Web Apps
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PROUD_FLOWER_0BF71611E }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           app_location: "./site/public"
-          api_location: ""
-          output_location: ""
-          github_id_token: ${{ steps.idtoken.outputs.result }}
           skip_app_build: true
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
-    name: Close Pull Request Job
     steps:
       - name: Close Pull Request
-        id: closepullrequest
         uses: Azure/static-web-apps-deploy@v1
         with:
           action: "close"
