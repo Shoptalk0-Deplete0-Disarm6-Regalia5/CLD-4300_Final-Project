@@ -60,14 +60,22 @@ jobs:
       - name: Build Hugo site
         run: hugo --minify --source=site --destination=site/public
 
-      - name: Show built files
+      - name: Debug artifact root - pwd, ls, tree, stat, head
         run: |
+          echo "PWD: $(pwd)"
+          echo "Runner user: $(id -un) $(id -a)"
           echo "Listing site/public (root):"
           ls -la site/public || true
-          echo "Find any index.html under site/public:"
-          find site/public -type f -name index.html -maxdepth 5 -print || true
-          echo "If index.html exists at root, show first lines:"
-          test -f site/public/index.html && head -n 20 site/public/index.html || echo "site/public/index.html not found"
+          echo "Recursive tree (maxdepth 4):"
+          find site/public -maxdepth 4 -print -exec ls -ld {} \; || true
+          echo "Find index files:"
+          find site/public -type f -iname index.html -maxdepth 5 -print -exec stat --format='  %n %s bytes %U:%G %A' {} \; || true
+          echo "Show first 20 lines of index.html if present:"
+          if [ -f site/public/index.html ]; then head -n 20 site/public/index.html; else echo "site/public/index.html not at root"; fi
+          echo "File checksum (md5) if present:"
+          if [ -f site/public/index.html ]; then md5sum site/public/index.html || true; fi
+          echo "Disk usage of artifact:"
+          du -sh site/public || true
 
       - name: Build And Deploy
         id: builddeploy
