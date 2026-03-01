@@ -3,10 +3,6 @@
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "forwardPorts": [1313],
-  "customizations": {
-    "vscode": {
-      "extensions": ["golang.go", "esbenp.prettier-vscode"]
-    }
-  },
+  "customizations": { "vscode": { "extensions": ["golang.go"] } },
   "remoteUser": "vscode"
 }
