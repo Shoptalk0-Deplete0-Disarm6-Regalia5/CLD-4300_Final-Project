@@ -2,7 +2,7 @@
 set -euo pipefail
 
 HUGO_VER="0.157.0"
-TAR_URL="https://github.com/gohugoio/hugo/releases/download/v${HUGO_VER}/hugo_${HUGO_VER}_Linux-64bit.tar.gz"
+TAR_URL="https://github.com/gohugoio/hugo/releases/download/v${HUGO_VER}/hugo_extended_${HUGO_VER}_Linux-64bit.tar.gz"
 TMP_TAR="/tmp/hugo.tar.gz"
 
 sudo apt-get update -y
