@@ -1,10 +1,12 @@
 # Generated site output
+/site/public/
+# Also ignore any top-level public if present
 /public/
 
 # Hugo build cache and generated resources
-site/resources/_gen/
-site/.hugo_build.lock
-site/.hugo_cache/
+/site/resources/_gen/
+/site/.hugo_build.lock
+/site/.hugo_cache/
 
 # Node / frontend
 node_modules/
@@ -23,6 +25,6 @@ Thumbs.db
 .devcontainer/.cache/
 .devcontainer/.local/
 
-# Optional: local binaries or temp files
+# Logs and temp files
 *.log
 *.tmp
