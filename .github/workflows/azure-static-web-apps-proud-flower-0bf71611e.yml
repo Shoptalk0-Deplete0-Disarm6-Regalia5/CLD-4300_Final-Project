@@ -14,119 +14,34 @@ jobs:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
-    permissions:
-      id-token: write
-      contents: read
     steps:
-      - name: Checkout repository (with submodules)
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v3
         with:
           submodules: true
           lfs: false
 
-      - name: Setup Node (for PostCSS if needed)
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Install npm deps if present
-        working-directory: site
-        run: |
-          if [ -f package.json ]; then
-            npm ci
-          fi
-
-      - name: Setup Hugo (Extended)
-        uses: peaceiris/actions-hugo@v2
-        with:
-          hugo-version: '0.157.0'
-          extended: true
-
-      - name: Hugo version
-        run: hugo version
-
-      - name: Build Hugo site (run inside site/)
-        working-directory: site
-        run: |
-          hugo --minify --destination=public --logLevel=info --printUnusedTemplates 2>&1 | tee hugo-build.log
-          echo "Build complete. Listing public/:"
-          ls -la public || true
-
-      - name: Show Hugo build tail
-        run: |
-          echo "Build log tail:"
-          tail -n 200 hugo-build.log || true
-
-      - name: Show artifact and checksums
-        run: |
-          echo "Listing site/public root:"
-          ls -la site/public || true
-          echo "Find any HTML files under site/public:"
-          find site/public -type f -iname '*.html' -maxdepth 6 -print -exec stat --format='%n %s bytes %U:%G %A' {} \; || true
-          echo "Find index files case-insensitive:"
-          find site/public -type f -iname 'index.*' -maxdepth 6 -print -exec stat --format='%n %s bytes %U:%G %A' {} \; || true
-          test -f site/public/index.html && md5sum site/public/index.html || true
-
-      - name: Debug artifact root full
-        run: |
-          echo "PWD: $(pwd)"
-          echo "Runner user: $(id -un) $(id -a)"
-          echo "Recursive tree (maxdepth 4):"
-          find site/public -maxdepth 4 -print -exec ls -ld {} \; || true
-          echo "Show first 40 lines of site/public/index.html if present:"
-          if [ -f site/public/index.html ]; then head -n 40 site/public/index.html; else echo "site/public/index.html not at root"; fi
-          echo "Disk usage of artifact:"
-          du -sh site/public || true
-
-      - name: Get Id Token (for OIDC)
-        id: idtoken
-        uses: actions/github-script@v6
-        with:
-          script: |
-            return await core.getIDToken();
-          result-encoding: string
-
-      - name: Deploy to Azure Static Web Apps
+      - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
-          # Replace this secret name with the exact repository secret you created in GitHub if different.
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PROUD_FLOWER_0BF71611E }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          github_id_token: ${{ steps.idtoken.outputs.result }}
           action: "upload"
-          # We built the site in the workflow and the artifact is at site/public
-          app_location: "./site/public"
-          api_location: ""
-          output_location: ""
-          skip_app_build: true
+          ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
+          # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
+          app_location: "./site" # App source code path
+          api_location: "" # Api source code path - optional
+          output_location: "public" # Built app content directory - optional
+          ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     name: Close Pull Request Job
-    permissions:
-      id-token: write
-      contents: read
     steps:
-      - name: Checkout repository (with submodules)
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-          lfs: false
-
-      - name: Get Id Token (for OIDC) (close)
-        id: idtoken-close
-        uses: actions/github-script@v6
-        with:
-          script: |
-            return await core.getIDToken();
-          result-encoding: string
-
       - name: Close Pull Request
         id: closepullrequest
         uses: Azure/static-web-apps-deploy@v1
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          github_id_token: ${{ steps.idtoken-close.outputs.result }}
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PROUD_FLOWER_0BF71611E }}
           action: "close"
