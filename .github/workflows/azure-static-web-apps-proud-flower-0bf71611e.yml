@@ -55,7 +55,7 @@ jobs:
       - name: Show Hugo build tail
         run: |
           echo "Build log tail:"
-          tail -n 200 site/hugo-build.log || tail -n 200 hugo-build.log || true
+          tail -n 200 hugo-build.log || true
 
       - name: Show artifact and checksums
         run: |
@@ -91,14 +91,12 @@ jobs:
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
-          # Keep the Azure deployment token from the original Azure-created workflow as a fallback
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_<GENERATED_HOSTNAME> }}
-          # GitHub token for PR comments/status updates
+          # Replace the secret name below with the exact repository secret you created.
+          # Common safe name: AZURE_STATIC_WEB_APPS_API_TOKEN
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          # OIDC id token (action will use OIDC if configured on the Azure side)
           github_id_token: ${{ steps.idtoken.outputs.result }}
           action: "upload"
-          # We built the site in the workflow and the artifact is at site/public
           app_location: "./site/public"
           api_location: ""
           output_location: ""
@@ -131,6 +129,6 @@ jobs:
         id: closepullrequest
         uses: Azure/static-web-apps-deploy@v1
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_<GENERATED_HOSTNAME> }}
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           github_id_token: ${{ steps.idtoken-close.outputs.result }}
           action: "close"
