@@ -83,7 +83,6 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const core = require('@actions/core');
             return await core.getIDToken();
           result-encoding: string
 
@@ -91,12 +90,13 @@ jobs:
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
-          # Replace the secret name below with the exact repository secret you created.
+          # Replace this secret name with the exact repository secret you created in GitHub.
           # Common safe name: AZURE_STATIC_WEB_APPS_API_TOKEN
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           github_id_token: ${{ steps.idtoken.outputs.result }}
           action: "upload"
+          # We built the site in the workflow and the artifact is at site/public
           app_location: "./site/public"
           api_location: ""
           output_location: ""
@@ -116,12 +116,11 @@ jobs:
           submodules: true
           lfs: false
 
-      - name: Get Id Token (for OIDC)
+      - name: Get Id Token (for OIDC) (close)
         id: idtoken-close
         uses: actions/github-script@v6
         with:
           script: |
-            const core = require('@actions/core');
             return await core.getIDToken();
           result-encoding: string
 
