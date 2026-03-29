@@ -1,2 +1,2 @@
-# CLD-4300_Lab-4
+# CLD-4300_Final-Project
 hugo framework static website with  CI/CD
